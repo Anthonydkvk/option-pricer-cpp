@@ -1,0 +1,17 @@
+# Build CMake
+build/
+compile_commands.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Images générées : ignorées partout, sauf dans docs/ (graphes du README)
+*.png
+!docs/**/*.png
+
+# macOS / éditeurs
+.DS_Store
+.vscode/
+.idea/
