@@ -36,6 +36,7 @@ add_library(pricer
     src/option.cpp
     src/normal.cpp
     src/black_scholes.cpp
+    src/binomial.cpp
 )
 target_include_directories(pricer PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(pricer PRIVATE pricer_warnings)
@@ -72,6 +73,7 @@ if(PRICER_BUILD_TESTS)
         tests/test_option.cpp
         tests/test_normal.cpp
         tests/test_black_scholes.cpp
+        tests/test_binomial.cpp
     )
     target_link_libraries(pricer_tests PRIVATE pricer pricer_warnings GTest::gtest_main)
 
