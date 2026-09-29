@@ -15,3 +15,6 @@ __pycache__/
 .DS_Store
 .vscode/
 .idea/
+
+# Notes personnelles (liens privés), non publiées
+LIENS.md
