@@ -80,7 +80,7 @@ option-pricer-cpp/
 
 ---
 
-## ☐ Étape 4 — Grecques par différences finies
+## ☑ Étape 4 — Grecques par différences finies
 **Prompt :**
 > Étape 4 : implémente dans `greeks.hpp/.cpp` une fonction générique qui calcule Δ, Γ, Vega, Θ, ρ
 > par différences finies centrées pour n'importe quelle méthode de pricing (passée en
