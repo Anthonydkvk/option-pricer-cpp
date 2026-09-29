@@ -29,7 +29,7 @@ option-pricer-cpp/
 
 ---
 
-## ☐ Étape 0 — Initialisation
+## ☑ Étape 0 — Initialisation
 **Prompt :**
 > Lis CLAUDE.md et ROADMAP.md. Étape 0 : initialise le dépôt git, crée l'arborescence, un
 > `.gitignore` (build/, .venv/, __pycache__/, *.png sauf docs/), et un CMakeLists.txt racine
@@ -41,7 +41,7 @@ option-pricer-cpp/
 
 ---
 
-## ☐ Étape 1 — Modèle d'option + Black-Scholes
+## ☑ Étape 1 — Modèle d'option + Black-Scholes
 **Prompt :**
 > Étape 1 : crée `option.hpp` (enum OptionType Call/Put, enum ExerciseStyle European/American,
 > struct MarketParams {S, r, q, sigma}, struct Option {type, style, K, T}) avec validation des
@@ -54,7 +54,7 @@ option-pricer-cpp/
 
 ---
 
-## ☐ Étape 2 — Arbre binomial CRR
+## ☑ Étape 2 — Arbre binomial CRR
 **Prompt :**
 > Étape 2 : implémente `binomial.hpp/.cpp` : arbre CRR (u = e^{σ√Δt}, d = 1/u,
 > p = (e^{(r−q)Δt} − d)/(u − d)), backward induction avec un seul vecteur (mémoire O(N)),
@@ -67,7 +67,7 @@ option-pricer-cpp/
 
 ---
 
-## ☐ Étape 3 — Monte Carlo
+## ☑ Étape 3 — Monte Carlo
 **Prompt :**
 > Étape 3 : implémente `monte_carlo.hpp/.cpp` pour les européennes : simulation exacte du GBM à
 > maturité S_T = S·exp((r − q − σ²/2)T + σ√T·Z), actualisation, retour d'une struct
