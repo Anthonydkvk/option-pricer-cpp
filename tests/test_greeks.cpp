@@ -81,7 +81,7 @@ TEST(FiniteDifferenceGreeks, DefaultSpotBumpIsTooSmallForTreeGamma) {
     EXPECT_GT(finite_difference_greeks(crr_500, put, standard_market).gamma, 1.0);  // BS : 0.0188
 }
 
-// Remède : un pas h_S plus grand que l'écart entre deux nœuds (≈ S σ sqrt(T / steps) ≈ 0.45 ici)
+// Remède : un pas h_S plus grand que l'écart entre deux nœuds (≈ 2 S σ sqrt(T / steps) ≈ 0.9 ici)
 // et un nombre de pas impair (aucun nœud exactement sur le strike).
 TEST(FiniteDifferenceGreeks, BinomialEuropeanCloseToBlackScholes) {
     const PricingFunction crr = [](const Option& o, const MarketParams& m) {
