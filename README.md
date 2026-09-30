@@ -20,7 +20,7 @@ No dependencies besides the C++ standard library. GoogleTest is fetched automati
 > | 3 | Monte Carlo (standard error, 95 % CI, antithetic variates) | done |
 > | 4 | Generic finite-difference Greeks | done |
 > | 5 | Command-line demo with timings | done |
-> | 6 | Python reference (NumPy/SciPy) and benchmark | planned |
+> | 6 | Python reference (NumPy/SciPy) and benchmark | done |
 > | 7 | CI (GCC and Clang) | planned |
 
 ## Build and test
@@ -157,6 +157,52 @@ Monte Carlo call: standard error 0.0209, 95 % CI [10.4335, 10.5153], which conta
 
 The early-exercise premium is about 0.52 (6.0902 − 5.5735). The American call without dividends (10.4515 at 2001 steps) equals the European call: early exercise is never optimal.
 
+## Python reference and benchmark
+
+`python/` contains an independent NumPy/SciPy implementation of the same models (`reference.py`) and two scripts that run the C++ CLI and check it against the reference:
+
+```bash
+cd python
+uv run reference.py      # Python prices and Greeks, checks the reference values
+uv run compare.py        # C++ vs Python: accuracy and timings (needs build/apps/pricer_cli)
+uv run convergence.py    # writes docs/convergence.png
+```
+
+([uv](https://docs.astral.sh/uv/) installs numpy, scipy and matplotlib from `pyproject.toml` and `uv.lock`.)
+
+**Accuracy.** Output of `compare.py`, standard case:
+
+| Option | Method | \|C++ − Python\| price | max \|C++ − Python\| Greeks |
+|---|---|---:|---:|
+| European call | Black-Scholes | 0 | 0 |
+| European call | CRR, 2001 steps | 3.6e-15 | 3.6e-11 |
+| European put | CRR, 2001 steps | 2.7e-15 | 3.1e-11 |
+| American put | CRR, 2001 steps | 3.6e-15 | 2.4e-10 |
+| European call | Monte Carlo, 500 000 paths | 0.024 = 0.83 standard errors | – |
+| European put | Monte Carlo, 500 000 paths | 0.023 = 1.31 standard errors | – |
+
+The deterministic methods agree to machine precision on prices. Finite-difference Greeks divide these 1e-15 differences by the bump (by h² = 1e-4 for Gamma), hence 1e-11. The CSV is written with 17 significant digits (`max_digits10`) so that reading it back gives exactly the same `double`. Monte Carlo cannot match to the digit: NumPy's generator (PCG64) and `std::mt19937_64` produce different numbers from the same seed. The two estimates are independent, so the test is |difference| < 3 × √(se₁² + se₂²).
+
+**Speed** (Apple M1, Apple Clang 17 Release build, Python 3.13, NumPy 2.5.3; one run, microseconds for one price):
+
+| Method | C++ | Python | Python / C++ |
+|---|---:|---:|---:|
+| Black-Scholes | 0.6 | 63.6 | ~110× |
+| CRR, 2001 steps, pure Python loops | 353 | 117 630 | 333× |
+| CRR, 2001 steps, NumPy (one vector operation per level) | 353 | 4 939 | 14× |
+| CRR American put, NumPy | 839 | 32 352 | 39× |
+| Monte Carlo, 500 000 paths | 19 541 | 11 306 | **0.6×** |
+
+- **CRR**: the backward induction is 2 million multiply-adds. In pure Python each one goes through the interpreter; in C++ it is a few machine instructions. NumPy removes the inner loop (one call per level of the tree), which cuts the gap from 333× to 14×; the outer loop over the 2001 levels is still Python. The American version is slower in NumPy because it recomputes the node spots with `u ** k` at every level, where the C++ code multiplies by u.
+- **Monte Carlo is faster in NumPy.** Measured separately (500 000 draws): `std::normal_distribution` over `std::mt19937_64` takes 10–15 ms, of which only 1.4 ms is the raw generator; NumPy's `standard_normal` takes 3 ms. The C++ standard library turns uniforms into normals with a slow method (Marsaglia polar: logarithm, square root, rejections), NumPy uses the faster ziggurat algorithm. Faster normal generation (ziggurat, or a quasi-random Sobol sequence) and multi-threading are the obvious C++ improvements.
+
+**Convergence** (every point is a real run of the C++ CLI):
+
+![Convergence of the CRR tree and Monte Carlo to Black-Scholes](docs/convergence.png)
+
+- CRR: the error decreases like 1/N (2.0e-2 at 100 steps, 2.0e-3 at 1000 for K = 100). At the money it is smooth, with a small even/odd zigzag. Out of the money (K = 110) it oscillates: depending on N, the strike falls close to a node or between two nodes.
+- Monte Carlo: the standard error decreases like 1/√N (10 000× more paths → 114× smaller). Antithetic variates lower it by about 30 % (1.04e-2 instead of 1.47e-2 at 1 000 000 paths). The error of one run (orange dots) scatters around the standard error, as expected from a random quantity.
+
 ## Things that went wrong, and why
 
 **Tree Gamma with a tiny bump is meaningless.** With a fixed number of steps, the CRR price is a weighted sum of $\max(S u^k - K, 0)$ terms, so it is *piecewise linear* in S. Its true Gamma is 0 between nodes and infinite where a node crosses the strike. With S = K and an even number of steps, a node sits exactly on the strike, and the default bump $h_S = 10^{-4} S$ returns Γ ≈ 3.35 at 500 steps (the exact value is 0.0188). The fix is a bump larger than the spacing between kinks ($\approx 2 S\sigma\sqrt{\Delta t}$, about 0.9 at 2001 steps) and an odd number of steps. A test (`DefaultSpotBumpIsTooSmallForTreeGamma`) documents the problem.
@@ -170,6 +216,8 @@ include/pricer/   public headers (option, normal, black_scholes, binomial, monte
 src/              implementations
 tests/            one GoogleTest file per module
 apps/             command-line demo (argument parsing, timing, table and CSV output)
+python/           NumPy/SciPy reference, C++ vs Python comparison, convergence plot
+docs/             figures used in this README
 ```
 
 ## Limitations and possible extensions

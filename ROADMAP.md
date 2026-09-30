@@ -102,7 +102,7 @@ option-pricer-cpp/
 
 ---
 
-## ☐ Étape 6 — Référence Python + benchmark
+## ☑ Étape 6 — Référence Python + benchmark
 **Prompt :**
 > Étape 6 : dans `python/`, crée `reference.py` (BS avec scipy.stats.norm, CRR vectorisé NumPy,
 > MC vectorisé NumPy, grecques), `compare.py` qui lance `pricer_cli --csv`, compare chaque valeur à
