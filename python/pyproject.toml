@@ -1,0 +1,14 @@
+[project]
+name = "option-pricer-reference"
+version = "0.1.0"
+description = "NumPy/SciPy reference implementation and benchmark for the C++ option pricer"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+]
+
+# Simple dossier de scripts : pas de paquet à installer.
+[tool.uv]
+package = false
