@@ -45,9 +45,15 @@ target_link_libraries(pricer PRIVATE pricer_warnings)
 
 # ---------------------------------------------------------------------------
 # Démo en ligne de commande -> build/apps/pricer_cli
+# La logique (arguments, calcul, affichage) est dans une petite bibliothèque séparée
+# pour pouvoir être testée ; l'exécutable ne contient que main().
 # ---------------------------------------------------------------------------
+add_library(pricer_cli_core apps/cli.cpp)
+target_include_directories(pricer_cli_core PUBLIC ${PROJECT_SOURCE_DIR}/apps)
+target_link_libraries(pricer_cli_core PUBLIC pricer PRIVATE pricer_warnings)
+
 add_executable(pricer_cli apps/pricer_cli.cpp)
-target_link_libraries(pricer_cli PRIVATE pricer pricer_warnings)
+target_link_libraries(pricer_cli PRIVATE pricer_cli_core pricer_warnings)
 set_target_properties(pricer_cli PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/apps)
 
@@ -78,9 +84,19 @@ if(PRICER_BUILD_TESTS)
         tests/test_binomial.cpp
         tests/test_monte_carlo.cpp
         tests/test_greeks.cpp
+        tests/test_cli.cpp
     )
-    target_link_libraries(pricer_tests PRIVATE pricer pricer_warnings GTest::gtest_main)
+    target_link_libraries(pricer_tests PRIVATE pricer_cli_core pricer_warnings
+                          GTest::gtest_main)
 
     include(GoogleTest)
     gtest_discover_tests(pricer_tests)
+
+    # Tests « de bout en bout » : on lance le vrai exécutable.
+    add_test(NAME cli_table COMMAND pricer_cli --steps 201 --paths 20000)
+    add_test(NAME cli_csv COMMAND pricer_cli --csv --steps 201 --paths 20000)
+    set_tests_properties(cli_csv PROPERTIES
+        PASS_REGULAR_EXPRESSION "^method,price,std_error")
+    add_test(NAME cli_rejects_bad_argument COMMAND pricer_cli --sigma abc)
+    set_tests_properties(cli_rejects_bad_argument PROPERTIES WILL_FAIL TRUE)
 endif()
