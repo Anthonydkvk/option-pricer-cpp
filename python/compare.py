@@ -36,12 +36,12 @@ class Row:
 
 
 def run_cli(cli: Path, option: ref.Option, market: ref.Market, steps: int, paths: int,
-            seed: int) -> dict[str, Row]:
+            seed: int, extra_args: tuple[str, ...] = ()) -> dict[str, Row]:
     args = [str(cli), "--csv",
             "--S", repr(market.S), "--K", repr(option.K), "--r", repr(market.r),
             "--q", repr(market.q), "--sigma", repr(market.sigma), "--T", repr(option.T),
             "--type", option.kind, "--style", option.style,
-            "--steps", str(steps), "--paths", str(paths), "--seed", str(seed)]
+            "--steps", str(steps), "--paths", str(paths), "--seed", str(seed), *extra_args]
     output = subprocess.run(args, check=True, capture_output=True, text=True).stdout
     rows = {}
     for line in csv.DictReader(io.StringIO(output)):
