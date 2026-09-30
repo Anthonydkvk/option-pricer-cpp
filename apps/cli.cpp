@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 
@@ -295,12 +296,13 @@ void print_table(std::ostream& out, const CliConfig& config,
 
 void print_csv(std::ostream& out, const std::vector<MethodResult>& results) {
     out << "method,price,std_error,delta,gamma,vega,theta,rho,price_us,greeks_us\n";
-    // 12 chiffres significatifs : assez pour comparer au 1e-10 près avec la référence Python.
+    // max_digits10 (= 17) chiffres significatifs : relire le texte redonne exactement le même
+    // double, la comparaison avec la référence Python n'est donc pas faussée par l'arrondi.
     std::ostringstream line;
     for (const MethodResult& r : results) {
         const Greeks& g = r.greeks;
         line.str("");
-        line << std::setprecision(12) << r.id << ',' << r.price << ',';
+        line << std::setprecision(std::numeric_limits<double>::max_digits10) << r.id << ',' << r.price << ',';
         if (r.monte_carlo) {
             line << r.monte_carlo->std_error;  // vide sinon : pas d'erreur statistique
         }

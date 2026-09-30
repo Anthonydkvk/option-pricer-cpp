@@ -145,7 +145,11 @@ TEST(CliOutput, CsvHasHeaderAndOneLinePerMethod) {
     EXPECT_EQ(csv.rfind("method,price,std_error,delta,gamma,vega,theta,rho,price_us,greeks_us\n", 0),
               0u);
     EXPECT_EQ(count_lines(csv), 1 + results.size());
-    EXPECT_NE(csv.find("\nbs_analytic,10.4505835722,,"), std::string::npos) << csv;
+    EXPECT_NE(csv.find("\nbs_analytic,10.45058357"), std::string::npos) << csv;
+
+    // Pleine précision : le prix relu depuis le CSV est exactement le double calculé.
+    const std::size_t start = csv.find("\nbs_analytic,") + std::string("\nbs_analytic,").size();
+    EXPECT_EQ(std::stod(csv.substr(start, csv.find(',', start) - start)), results[0].price);
 }
 
 TEST(CliOutput, TableListsEveryMethod) {
