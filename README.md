@@ -19,7 +19,7 @@ No dependencies besides the C++ standard library. GoogleTest is fetched automati
 > | 2 | CRR binomial tree (European and American) | done |
 > | 3 | Monte Carlo (standard error, 95 % CI, antithetic variates) | done |
 > | 4 | Generic finite-difference Greeks | done |
-> | 5 | Command-line demo with timings | planned |
+> | 5 | Command-line demo with timings | done |
 > | 6 | Python reference (NumPy/SciPy) and benchmark | planned |
 > | 7 | CI (GCC and Clang) | planned |
 
@@ -62,6 +62,30 @@ Greeks tree_greeks = finite_difference_greeks(tree, american_put, market, BumpSi
 ```
 
 Invalid inputs (S, K, σ, T ≤ 0, steps or paths ≤ 0, American option passed to Black-Scholes or Monte Carlo) throw `std::invalid_argument`.
+
+## Command-line demo
+
+```bash
+./build/apps/pricer_cli                                # standard case, European call
+./build/apps/pricer_cli --type put --style american    # American put (CRR tree only)
+./build/apps/pricer_cli --K 110 --sigma 0.3 --csv      # CSV output (used by the Python comparison)
+./build/apps/pricer_cli --help                         # all options
+```
+
+Output of `./build/apps/pricer_cli` (Apple Clang 17, Release build, times in microseconds):
+
+```
+Method                              Price    Std err      Delta      Gamma       Vega      Theta        Rho   Time price  Time greeks
+-------------------------------------------------------------------------------------------------------------------------------------
+Black-Scholes (analytic)        10.450584          -   0.636831   0.018762  37.524035  -6.414028  53.232482          0.2          0.1
+Black-Scholes (finite diff.)    10.450584          -   0.636831   0.018762  37.524034  -6.414028  53.232481          0.2          0.5
+CRR tree (2001 steps)           10.451460          -   0.636533   0.018537  37.529199  -6.414350  53.228603        363.0       3228.7
+Monte Carlo (500000 paths)      10.474419   0.020882   0.637952   0.018811  37.642292  -6.430337  53.320811      19770.7     177168.6
+
+Monte Carlo: seed 42, 95 % CI [10.433492, 10.515346]
+```
+
+Finite-difference Greeks cost about 9 prices (2 per first-order Greek, plus the base price for Gamma), which the timings show: 363 µs → 3.2 ms for the tree, 20 ms → 177 ms for Monte Carlo. Times come from a single run, so they vary a little between runs.
 
 ## Models
 
@@ -145,7 +169,7 @@ The early-exercise premium is about 0.52 (6.0902 − 5.5735). The American call 
 include/pricer/   public headers (option, normal, black_scholes, binomial, monte_carlo, greeks)
 src/              implementations
 tests/            one GoogleTest file per module
-apps/             command-line demo (step 5)
+apps/             command-line demo (argument parsing, timing, table and CSV output)
 ```
 
 ## Limitations and possible extensions

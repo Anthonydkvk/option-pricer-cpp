@@ -93,7 +93,7 @@ option-pricer-cpp/
 
 ---
 
-## ☐ Étape 5 — Démo CLI
+## ☑ Étape 5 — Démo CLI
 **Prompt :**
 > Étape 5 : écris `apps/pricer_cli.cpp` qui prend les paramètres en arguments (avec des valeurs par
 > défaut = cas standard de CLAUDE.md) et affiche un tableau aligné : pour chaque méthode, prix,
