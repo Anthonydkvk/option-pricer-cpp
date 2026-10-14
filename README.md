@@ -166,6 +166,7 @@ cd python
 uv run reference.py      # Python prices and Greeks, checks the reference values
 uv run compare.py        # C++ vs Python: accuracy and timings (needs build/apps/pricer_cli)
 uv run convergence.py    # writes docs/convergence.png
+uv run figures.py        # writes the five comparison figures below to docs/
 ```
 
 ([uv](https://docs.astral.sh/uv/) installs numpy, scipy and matplotlib from `pyproject.toml` and `uv.lock`.)
@@ -202,6 +203,30 @@ The deterministic methods agree to machine precision on prices. Finite-differenc
 
 - CRR: the error decreases like 1/N (2.0e-2 at 100 steps, 2.0e-3 at 1000 for K = 100). At the money it is smooth, with a small even/odd zigzag. Out of the money (K = 110) it oscillates: depending on N, the strike falls close to a node or between two nodes.
 - Monte Carlo: the standard error decreases like 1/√N (10 000× more paths → 114× smaller). Antithetic variates lower it by about 30 % (1.04e-2 instead of 1.47e-2 at 1 000 000 paths). The error of one run (orange dots) scatters around the standard error, as expected from a random quantity.
+
+## Figures
+
+All five figures come from `python/figures.py`: every C++ value is a real run of `pricer_cli`.
+
+**The three methods agree on the price.** Top: price against spot for a European call and put; the CRR (501 steps) and Monte Carlo (100 000 paths) points sit on the Black-Scholes curve. Bottom: the error. CRR stays within a few thousandths; the Monte Carlo error stays inside its 95 % band. It drifts smoothly with S instead of jumping around because every spot reuses the same seed, hence the same random numbers.
+
+![Prices of the three methods vs spot](docs/prices_vs_spot.png)
+
+**Greeks: analytic vs finite differences.** Black-Scholes analytic Greeks (line) against bump-and-reprice Greeks of the tree and of Monte Carlo (dots). Delta, Vega, Theta and Rho match closely. Gamma, a second derivative of a random price, is visibly noisy for Monte Carlo even with common random numbers.
+
+![The five Greeks vs spot](docs/greeks_vs_spot.png)
+
+**American vs European.** Left: the American put is worth more than the European put, and for S ≤ 80 on this grid it equals its exercise value K − S: exercising immediately is optimal. Right: the early-exercise premium of the put, and that of the call without dividends, which is zero everywhere.
+
+![American vs European](docs/american_vs_european.png)
+
+**Monte Carlo is a random estimate.** 300 runs of 10 000 paths with seeds 0 to 299. The prices scatter around the exact value with a standard deviation of 0.151, close to the standard error each run reports (0.147 on average). 93.3 % of the 95 % confidence intervals contain the exact price.
+
+![Distribution of Monte Carlo estimates](docs/monte_carlo_distribution.png)
+
+**Speed.** Time for one price, median of 5 runs (log scale). The figure is regenerated at each run of the script, so its numbers differ slightly from the table above.
+
+![C++ vs Python timings](docs/benchmark.png)
 
 ## Things that went wrong, and why
 
